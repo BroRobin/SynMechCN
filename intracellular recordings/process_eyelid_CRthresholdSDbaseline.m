@@ -1,5 +1,5 @@
 %% Process behavioral data
-% Detect CRs/EOs based on values that exceed 5x SD of the baseline. Calculate parameters of CR and UR eyelid movements.
+% Detect CRs/EOs based on values that exceed Param.CR_SDthreshold x SD of the baseline. Calculate parameters of CR and UR eyelid movements.
 % (c) R. Broersen, Erasmus MC, 2023
 
 %Preallocate the general variables
