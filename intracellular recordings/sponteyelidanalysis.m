@@ -1,4 +1,5 @@
-%% mod_spontEyeAnalysisv1
+%% Analyze the spontaneous eyelid movements occurring between CS/US trials
+% (c) R. Broersen, Erasmus MC, 2023
 
 close; clear all;
 for jj=1:31
