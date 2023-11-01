@@ -13,7 +13,7 @@ Time = 1:0.4*fs;
 % counter=0;
 
 for yy=1:13 % neurons
-    for jj=1:29% permutations
+    for jj=1:30% permutations
         if jj==1
             tic;
         end
@@ -172,7 +172,7 @@ perm.dec_accuracy=[];
 counter=0;
 
 for yy=1:13 % neurons
-    for jj=1:29 % permutations
+    for jj=1:30 % permutations
         counter=counter+1;
         if yy==1
             X = labels(logical(sum(cellID==perm.N15(jj,:),2)));
