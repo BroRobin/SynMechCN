@@ -450,6 +450,7 @@ create_cellresp_grandaverages;
 
 %% Correlation PSP vs eyelid
 process_correlation_prep;
+population_correlation;
 
 %% Generate timing figures (Vm aligned vs eyelid aligned)
 % if trained mice:
