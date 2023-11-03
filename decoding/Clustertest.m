@@ -1,6 +1,5 @@
 %% Script to perform a cluster test based on the decoding results for conditioned and naive neurons
-% Modified by R. Broersen from code provided by M. Tang, ANU, 2021.
-% R. Broersen, Erasmus MC, 2023
+% Modified by R. Broersen from code kindly provided by M. Tang, ANU, 2021.
 
 % !!! Manually load the saved variable from the decoding script.
 
