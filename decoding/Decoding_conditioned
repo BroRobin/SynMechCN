@@ -1,6 +1,5 @@
 %% Script to perform decoding based on Vm traces from trained neurons
-% Modified by R. Broersen from code provided by M. Tang, ANU, 2021.
-% R. Broersen, Erasmus MC, 2023
+% Modified by R. Broersen from code kindly provided by M. Tang, ANU, 2021.
 
 clear all; close all
 data=[];
