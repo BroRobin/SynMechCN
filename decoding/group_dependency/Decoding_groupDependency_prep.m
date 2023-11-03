@@ -3,7 +3,7 @@
 % intracellularly. Per group (size from 15 to 3 neurons) decoding is
 % performed 29 times. 
 
-% (c) R. Broersen, Erasmus MC, 2023
+% Modified by R. Broersen from code kindly provided by M. Tang, ANU, 2021.
 
 %% Data preparation
 % Create set of 24 permutations for each groupsize (1-15)
