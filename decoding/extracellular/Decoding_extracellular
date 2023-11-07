@@ -1,0 +1,142 @@
+%% Script to perform decoding based on juxtasomal spike traces
+% Modified by R. Broersen from code kindly provided by M. Tang, ANU, 2021.
+
+clear all; close all
+
+% Load the dataset
+cd('[path]')
+load('Final_EphysDataOutput_allData+facilitationQuantification+FF+lists.mat')
+cellName=allData.cellName;
+
+% Gather data and assign labels
+decod_data=[];
+decod_labels=[];
+
+for kk=1:size(cellName,1)
+    kk
+    loadfile=sprintf('EphysDataOutput_%s.mat',cellName{kk});
+    load(loadfile)
+
+    decod_data = [decod_data; Spks.ind_trial_spiketimes_CS_CR'];
+    try
+        if Spks.ind_trial_spiketimes_CS_CR{1}(1)>0
+            decod_labels = [decod_labels; repmat(1,[size(Spks.ind_trial_spiketimes_CS_CR,2) 1])];
+
+        end
+    catch
+        disp('error gathering spks for CR trials')
+    end
+
+
+    decod_data = [decod_data; Spks.ind_trial_spiketimes_CS_noCR'];
+    try
+        if Spks.ind_trial_spiketimes_CS_noCR{1}(1)>0
+            decod_labels = [decod_labels; repmat(0,[size(Spks.ind_trial_spiketimes_CS_noCR,2) 1])];
+
+        end
+    catch
+        disp('error gathering spks for noCR trials')
+    end
+end
+
+%% Convert into bins (pooled file)
+binsize = 0.005; %binsize in ms
+triallength = 2000; %trial length in ms
+decod_data_bincounts = [];
+decod_data_bin_labels=[];
+edges = 0:binsize:2;%10ms bins
+binCenters = edges(2:end)-(binsize/2);
+
+for ii = 1: size(decod_data,1) % trials
+    binidx =zeros([1 400]); %5ms bins
+    Y = discretize(decod_data{ii,1},edges);
+
+    for xx = 1:size(Y,1) % spikes into values
+        try
+            binidx(Y(xx)) = binidx(Y(xx))+1;
+        catch
+            fprintf('error: neuron %.f trial %.f spike %.f \n',kk,ii,xx)
+        end
+    end
+
+    decod_data_bincounts = [decod_data_bincounts; binidx];
+end
+
+%% Decoding script
+
+X = decod_labels;
+store = decod_data_bincounts;
+cfg=[];
+cfg.nFold=10; % 10 fold cross validation
+
+folds=createFolds(cfg,X); % selects an equal number of trials of each orientation
+index = 1:length(X);
+avg = mean(mean(store));
+store2 = store;
+store2=filtfast(store2,2,[],'gaussian',5); % temporally filters the data
+
+% Normalise to baseline
+norm_store2=[];
+figure; hold on;
+for ii=1:size(store2,1)
+    norm_store2(ii,:) = (store2(ii,:)-mean(store2(ii,50:100)));
+    plot(norm_store2(ii,:))
+end
+
+store2 = norm_store2;
+
+decode=zeros(size(store2,1),size(store2,2));
+for ii=1:length(folds)
+
+    testTrial = folds{ii}; % selects the trials which the classifier will be tested on
+    trainTrial=~ismember(index,testTrial); % selects all other trials for training set
+    trainDat = squeeze(store2(trainTrial,:,:)); % selects the data
+    testDat = squeeze(store2(testTrial,:,:));
+    decodeTemp=zeros(length(testTrial),size(store2,2));
+
+    parfor time =1:size(store2,2)
+        [ ii time]
+        temp =classify(squeeze(testDat(:,time,:)),squeeze(trainDat(:,time,:)),X(trainTrial),'linear'); % does the classification
+        decodeTemp(:,time) = temp; % finds out how many times the decoder was correct
+    end
+    decode(testTrial,:)=decodeTemp;
+end
+
+
+%% Plot All neurons, all 2 responses with SEM
+figure; hold on;
+temp = decode==X;
+
+decod_meanAccuracy = mean(decode==X)*100;
+decod_SDAccuracy = std(decode==X)*100;
+decod_SEMAccuracy = decod_SDAccuracy./sqrt(sum(temp==1|temp==0));
+
+fs=200;
+
+%CS+US period
+binCenters=[-0.15:1/fs:0.5];
+plot(binCenters,decod_meanAccuracy((0.35*fs):(1*fs)),'k')
+plot(binCenters,decod_meanAccuracy((0.35*fs):(1*fs))+decod_SEMAccuracy((0.35*fs):(1*fs)),'r')
+plot(binCenters,decod_meanAccuracy((0.35*fs):(1*fs))-decod_SEMAccuracy((0.35*fs):(1*fs)),'r')
+
+plot(binCenters, repmat(50,[length(binCenters) 1]),'k-');
+
+set(gca,'FontSize',14)
+ylabel('Decoding accuracy (%)','fontSize',16); xlabel('Time (s)','fontSize',16);
+xlim([-0.15 0.25]); ylim([20 80]);
+line([0 0],   [min(get(gca, 'Ylim')) max(get(gca, 'Ylim'))], 'Color', 'g','LineWidth',1);
+line([0.25 0.25],   [min(get(gca, 'Ylim')) max(get(gca, 'Ylim'))], 'Color', 'g','LineWidth',1);
+line([0.26 0.26],   [min(get(gca, 'Ylim')) max(get(gca, 'Ylim'))], 'Color', 'g','LineWidth',1);
+
+% Save the output from the decoding analysis
+cd('[path]')
+orient('portrait')
+figname = 'Allneurons_decoded.fig';
+saveas(gcf,figname,'fig');
+figname = 'Allneurons_decoded.pdf';
+print('-dpdf','-painters','-loose',figname);
+
+% Peak decoder accuracy and when
+[AccMax(1) AccMax(2)] = max(decod_meanAccuracy(0.5*fs:0.75*fs));
+AccMax(3)=(AccMax(2)/fs);
+AccMax(4)=decod_SEMAccuracy(AccMax(2));
