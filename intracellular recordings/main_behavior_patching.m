@@ -464,3 +464,7 @@ alignBehavEphysOnset_groupcomparison;
 sponteyelidanalysis;
 alignBehavEphysOnset_spontEM;
 alignBehavEphysOnset_spontEM_groupdata;
+
+%% Analyse US traces
+US_processing_naive;
+US_processing_cond;
